@@ -38,7 +38,7 @@ typeset -aHg AGNOSTER_PROMPT_SEGMENTS=(
 
 CURRENT_BG='NONE'
 if [[ -z "$PRIMARY_FG" ]]; then
-	PRIMARY_FG=black
+  PRIMARY_FG=black
 fi
 
 # Characters
@@ -85,7 +85,18 @@ prompt_context() {
   local user=`whoami`
 
   if [[ "$user" != "$DEFAULT_USER" || -n "$SSH_CONNECTION" ]]; then
-    prompt_segment $PRIMARY_FG default " %(!.%{%F{yellow}%}.)$user@%m "
+    prompt_segment $PRIMARY_FG default "╭─[\033[1;30m$user%{%F{red}%}@%{%F{white}%}%m]\n%{$reset_color%}"
+  fi
+
+  if [[ "$UID" = 0 ]]; then
+    prompt_segment $PRIMARY_FG default "╭─[%{%F{red}%}$user]\n%{$reset_color%}"
+  fi
+
+  if [ "$STATUS_CHANGED" = true ] ; then
+    prompt_segment $PRIMARY_FG default "   ╰───▪" #●
+    STATUS_CHANGED=false
+  else
+    prompt_segment $PRIMARY_FG default "╰───▪" #●
   fi
 }
 
@@ -126,9 +137,9 @@ prompt_dir() {
 prompt_status() {
   local symbols
   symbols=()
-  [[ $RETVAL -ne 0 ]] && symbols+="%{%F{red}%}$CROSS"
-  [[ $UID -eq 0 ]] && symbols+="%{%F{yellow}%}$LIGHTNING"
-  [[ $(jobs -l | wc -l) -gt 0 ]] && symbols+="%{%F{cyan}%}$GEAR"
+  [[ $RETVAL -ne 0 ]] && symbols+="%{%F{red}%}$CROSS" && STATUS_CHANGED=true
+  [[ $UID -eq 0 ]] && symbols+="%{%F{yellow}%}$LIGHTNING" && STATUS_CHANGED=true
+  [[ $(jobs -l | wc -l) -gt 0 ]] && symbols+="%{%F{cyan}%}$GEAR" && STATUS_CHANGED=true
 
   [[ -n "$symbols" ]] && prompt_segment $PRIMARY_FG default " $symbols "
 }
